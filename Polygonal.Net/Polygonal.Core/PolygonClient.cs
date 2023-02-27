@@ -3,6 +3,9 @@ using System.Threading.RateLimiting;
 
 namespace Polygonal.Core
 {
+    /// <summary>
+    /// This is the base Polygon.io client, used for sending raw requests to the service and deserializing the response.
+    /// </summary>
     public class PolygonClient : IDisposable
     {
         private const string ApiKeyParameterName = "apiKey";
@@ -26,6 +29,13 @@ namespace Polygonal.Core
             _disposeLimiter = disposeLimiter;
         }
 
+        /// <summary>
+        /// Sends an asynchronous request to the service with a URL derived from the specific request instance.
+        /// </summary>
+        /// <typeparam name="T">Type of the expected return value (for deserialization)</typeparam>
+        /// <param name="request">Request to be made</param>
+        /// <param name="cancel">Token to cancel the request</param>
+        /// <returns>Task result encapsulating the response value</returns>
         public async Task<T?> SendRequestAsync<T>(Request request, CancellationToken cancel = default)
         {
             using RateLimitLease lease = await _limiter.AcquireAsync(1, cancel);
@@ -34,6 +44,9 @@ namespace Polygonal.Core
             return await _client.GetFromJsonAsync<T>(request.GetRequestUrl(), cancel);
         }
 
+        /// <summary>
+        /// Disposes of the instance and any internal resources that this instance is responsible for.
+        /// </summary>
         public void Dispose()
         {
             if (_disposeLimiter)
