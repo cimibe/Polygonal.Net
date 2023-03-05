@@ -7,7 +7,19 @@ namespace Polygonal.Core
     /// </summary>
     public class Request
     {
-        private const string TrueString = "true", FalseString = "false";
+        private const string AscendingString = "asc";
+        private const string DescendingString = "desc";
+
+        private const string MinuteString = "minute";
+        private const string HourString = "hour";
+        private const string DayString = "day";
+        private const string WeekString = "week";
+        private const string MonthString = "month";
+        private const string QuarterString = "quarter";
+        private const string YearString = "year";
+
+        private const string TrueString = "true";
+        private const string FalseString = "false";
 
         private StringBuilder builder = new StringBuilder(512); // avoid re-allocation by giving us plenty of size up-front
         private bool addedGetParameter = false;
@@ -67,6 +79,23 @@ namespace Polygonal.Core
         /// <returns>The current request instance</returns>
         public Request AddGetParameter(string key, bool value) => AddGetParameter(key, ToString(value));
 
+        public Request AddGetParameter(SortOrder sortOrder)
+        {
+            string orderString;
+            switch (sortOrder)
+            {
+                case SortOrder.Ascending:
+                    orderString = AscendingString;
+                    break;
+                case SortOrder.Descending:
+                    orderString = DescendingString;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(sortOrder));
+            }
+            return AddGetParameter("sort", orderString);
+        }
+
         /// <summary>
         /// Adds a new REST parameter of the form "/parameter" to the request URL.
         /// </summary>
@@ -74,7 +103,7 @@ namespace Polygonal.Core
         /// <returns>The current request instance</returns>
         /// <exception cref="InvalidOperationException">Throws InvalidOperationException if attempting to add REST parameters
         /// after GET parameters.</exception>
-        public Request AddRestParameter(string parameter)
+        public Request AddUrlParameter(string parameter)
         {
             if (this.addedGetParameter)
             {
@@ -94,7 +123,7 @@ namespace Polygonal.Core
         /// <returns>The current request instance</returns>
         /// <exception cref="InvalidOperationException">Throws InvalidOperationException if attempting to add REST parameters
         /// after GET parameters.</exception>
-        public Request AddRestParameter(DateTime date) => AddRestParameter(ToString(date));
+        public Request AddUrlParameter(DateTime date) => AddUrlParameter(ToString(date));
 
         /// <summary>
         /// Adds a new REST parameter of the form "/parameter" to the request URL. This function is just a helper that
@@ -104,7 +133,37 @@ namespace Polygonal.Core
         /// <returns>The current request instance</returns>
         /// <exception cref="InvalidOperationException">Throws InvalidOperationException if attempting to add REST parameters
         /// after GET parameters.</exception>
-        public Request AddRestParameter(int value) => AddRestParameter(ToString(value));
+        public Request AddUrlParameter(int value) => AddUrlParameter(ToString(value));
+
+        public Request AddUrlParameter(Period period)
+        {
+            AddUrlParameter(period.Multiple);
+
+            string basisString;
+            switch (period.PeriodBasis)
+            {
+                case Period.Basis.Minute:
+                    basisString = MinuteString;
+                    break;
+                case Period.Basis.Hour:
+                    basisString = HourString;
+                    break;
+                case Period.Basis.Day:
+                    basisString = DayString;
+                    break;
+                case Period.Basis.Week:
+                    basisString = WeekString;
+                    break;
+                case Period.Basis.Month:
+                    basisString = MonthString;
+                    break;
+                case Period.Basis.Year:
+                    basisString = YearString;
+                    break;
+                default: throw new ArgumentOutOfRangeException();
+            }
+            return AddUrlParameter(basisString);
+        }
 
         internal string GetRequestUrl()
         {
